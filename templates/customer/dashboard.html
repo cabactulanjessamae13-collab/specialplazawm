@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Customer Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>My Dashboard</h1>
+    </div>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ registered_appliances }}</div>
+            <div class="stat-label">Registered Appliances</div>
+            <div class="stat-description">Total devices registered</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-number">{{ active_warranties }}</div>
+            <div class="stat-label">Active Warranties</div>
+            <div class="stat-description">Currently under warranty</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-number">{{ service_requests }}</div>
+            <div class="stat-label">Service Requests</div>
+            <div class="stat-description">All time requests</div>
+        </div>
+    </div>
+    
+    <div class="dashboard-content">
+        <div class="dashboard-section">
+            <div class="section-header">
+                <h2>My Appliances</h2>
+                <span class="section-subtitle">Your registered appliances</span>
+            </div>
+            
+            {% if appliances %}
+                <div class="appliances-list">
+                    {% for appliance in appliances %}
+                        <div class="appliance-card">
+                            <h3>{{ appliance.appliance_name }}</h3>
+                            <p class="appliance-model">{{ appliance.brand }} - {{ appliance.model }}</p>
+                            <p class="appliance-serial">Serial: {{ appliance.serial_number }}</p>
+                            <p class="appliance-warranty-count">{{ appliance.warranty_count }} Warranty(s)</p>
+                        </div>
+                    {% endfor %}
+                </div>
+                <a href="{{ url_for('customer_warranties') }}" class="link-view-all">View All</a>
+            {% else %}
+                <p class="empty-state">No appliances registered yet.</p>
+            {% endif %}
+        </div>
+        
+        <div class="dashboard-section">
+            <div class="section-header">
+                <h2>Recent Service Requests</h2>
+                <span class="section-subtitle">Track your service requests</span>
+            </div>
+            
+            {% if recent_requests %}
+                <div class="requests-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Appliance</th>
+                                <th>Status</th>
+                                <th>Technician</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in recent_requests %}
+                                <tr>
+                                    <td><strong>{{ req.title }}</strong></td>
+                                    <td>{{ req.brand }}</td>
+                                    <td><span class="status-badge status-{{ req.status|replace('_', '-') }}">{{ req.status|replace('_', ' ')|title }}</span></td>
+                                    <td>{{ req.technician_name or 'Unassigned' }}</td>
+                                    <td>{{ req.created_at.strftime('%m/%d/%Y') }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <a href="{{ url_for('customer_service_requests') }}" class="link-view-all">View All Requests</a>
+            {% else %}
+                <p class="empty-state">No service requests yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

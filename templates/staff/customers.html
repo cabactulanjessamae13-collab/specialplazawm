@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Management - Staff Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Customer Management</h1>
+        <button class="btn btn-primary" onclick="openAddCustomerModal()">+ Add Customer</button>
+    </div>
+    
+    {% if customers %}
+        <div class="customers-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                        <tr>
+                            <td><strong>{{ customer.full_name }}</strong></td>
+                            <td>{{ customer.email }}</td>
+                            <td>{{ customer.phone or 'N/A' }}</td>
+                            <td>{{ customer.address or 'N/A' }}</td>
+                            <td><a href="javascript:void(0);" class="action-link" data-id="{{ customer.customer_id }}" data-name="{{ customer.full_name }}" data-email="{{ customer.email }}" data-phone="{{ customer.phone }}" data-address="{{ customer.address }}" onclick="openEditCustomerModal(this)">Edit</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No customers registered yet.</p>
+            <button class="btn btn-primary" onclick="openAddCustomerModal()">Add First Customer</button>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Add Customer Modal -->
+<div id="addCustomerModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeAddCustomerModal()">&times;</span>
+        <h2>Register New Customer</h2>
+        <p>Add a new customer to the system</p>
+        
+        <form method="POST" action="{{ url_for('add_customer') }}">
+            <div class="form-group">
+                <label for="full_name">Full Name</label>
+                <input type="text" id="full_name" name="full_name" placeholder="John Doe" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="john@example.com" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" title="Please enter a valid email address (e.g., john@example.com)" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="tel" id="phone" name="phone" placeholder="+1 234 567 8900">
+            </div>
+            
+            <div class="form-group">
+                <label for="address">Address</label>
+                <input type="text" id="address" name="address" placeholder="123 Main St">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter password for login" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">Register Customer</button>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Customer Modal -->
+<div id="editCustomerModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeEditCustomerModal()">&times;</span>
+        <h2>Edit Customer</h2>
+        <p>Update customer information</p>
+        
+        <form method="POST" action="" id="editCustomerForm">
+            <input type="hidden" id="edit_customer_id" name="customer_id" value="">
+            
+            <div class="form-group">
+                <label for="edit_full_name">Full Name</label>
+                <input type="text" id="edit_full_name" name="full_name" placeholder="John Doe" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="edit_email">Email</label>
+                <input type="email" id="edit_email" name="email" placeholder="john@example.com" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" title="Please enter a valid email address (e.g., john@example.com)" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="edit_phone">Phone</label>
+                <input type="tel" id="edit_phone" name="phone" placeholder="+1 234 567 8900">
+            </div>
+            
+            <div class="form-group">
+                <label for="edit_address">Address</label>
+                <input type="text" id="edit_address" name="address" placeholder="123 Main St">
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">Update Customer</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function openAddCustomerModal() {
+    document.getElementById('addCustomerModal').style.display = 'block';
+}
+
+function closeAddCustomerModal() {
+    document.getElementById('addCustomerModal').style.display = 'none';
+}
+
+function openEditCustomerModal(element) {
+    var customerId = element.getAttribute('data-id');
+    var fullName = element.getAttribute('data-name');
+    var email = element.getAttribute('data-email');
+    var phone = element.getAttribute('data-phone') || '';
+    var address = element.getAttribute('data-address') || '';
+    
+    document.getElementById('edit_customer_id').value = customerId;
+    document.getElementById('edit_full_name').value = fullName;
+    document.getElementById('edit_email').value = email;
+    document.getElementById('edit_phone').value = phone;
+    document.getElementById('edit_address').value = address;
+
+    
+    // Update form action URL
+    var form = document.getElementById('editCustomerForm');
+    form.action = '/staff/customer/edit/' + customerId;
+    
+    document.getElementById('editCustomerModal').style.display = 'block';
+}
+
+function closeEditCustomerModal() {
+    document.getElementById('editCustomerModal').style.display = 'none';
+}
+
+window.onclick = function(event) {
+    var addModal = document.getElementById('addCustomerModal');
+    var editModal = document.getElementById('editCustomerModal');
+    if (event.target == addModal) {
+        addModal.style.display = 'none';
+    }
+    if (event.target == editModal) {
+        editModal.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}
+

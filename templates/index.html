@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Special Appliance Plaza - Warranty Management Made Simple{% endblock %}
+
+{% block content %}
+<div class="landing-page">
+    <section class="hero">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Special Appliance Plaza" class="hero-logo" style="margin-top: -50px;">
+        <h1>Warranty Management Made Simple</h1>
+        <p>Streamline your appliance warranty tracking, service requests, and customer management all in one powerful platform.</p>
+        <div class="hero-buttons">
+            <a href="{{ url_for('login') }}" class="btn btn-primary">Get Started</a>
+            <button onclick="toggleFeatures()" class="btn btn-secondary">Learn More</button>
+        </div>
+    </section>
+    
+    <section id="features" class="features features-hidden">
+        <h2>Complete Warranty Management Solution</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">👥</div>
+                <h3>Customer Portal</h3>
+                <p>Easy warranty tracking and service request management for customers</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔧</div>
+                <h3>Technician Tools</h3>
+                <p>Efficient service request assignment and status tracking</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">✓</div>
+                <h3>Staff Management</h3>
+                <p>Complete customer, appliance, and warranty administration</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Analytics Dashboard</h3>
+                <p>Real-time insights and comprehensive reporting for managers</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+{% endblock %}

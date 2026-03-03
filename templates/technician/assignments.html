@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}My Assignments - Technician Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>My Assignments</h1>
+    </div>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ pending }}</div>
+            <div class="stat-label">Pending</div>
+            <div class="stat-description">Awaiting action</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-number">{{ in_progress }}</div>
+            <div class="stat-label">In Progress</div>
+            <div class="stat-description">Currently working</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-number">{{ completed }}</div>
+            <div class="stat-label">Completed</div>
+            <div class="stat-description">All time</div>
+        </div>
+    </div>
+    
+    {% if assignments %}
+        <div class="assignments-list">
+            {% for assignment in assignments %}
+                <div class="assignment-card">
+                    <div class="assignment-header">
+                        <h3>{{ assignment.title }}</h3>
+                        <span class="badge badge-{{ assignment.priority }}">{{ assignment.priority|capitalize }} Priority</span>
+                        <span class="status-badge status-{{ assignment.status|replace('_', '-') }}">{{ assignment.status|replace('_', ' ')|title }}</span>
+                    </div>
+                    
+                    <div class="assignment-details">
+                        <div class="detail-row">
+                            <label>Appliance:</label>
+                            <span>{{ assignment.appliance_name }} - {{ assignment.brand }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Customer:</label>
+                            <span>{{ assignment.customer_name }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Customer Contact:</label>
+                            <span>{{ assignment.phone }}<br>{{ assignment.email }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Description:</label>
+                            <span>{{ assignment.description }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Created:</label>
+                            <span>{{ assignment.created_at.strftime('%m/%d/%Y %H:%M') }}</span>
+                        </div>
+                        {% if assignment.technician_notes %}
+                        <div class="detail-row">
+                            <label>Notes:</label>
+                            <span>{{ assignment.technician_notes }}</span>
+                        </div>
+                        {% endif %}
+                        {% if assignment.customer_confirmed and assignment.scheduled_date %}
+                        <div class="detail-row" style="background: #d4edda; padding: 10px; border-radius: 5px; margin-top: 10px;">
+                            <label style="color: #155724;"><strong>CONFIRMED SCHEDULE:</strong></label>
+                            <span style="color: #155724; font-weight: bold;">
+                                {% if assignment.scheduled_date %}{{ assignment.scheduled_date.strftime('%A, %B %d, %Y') }}{% endif %} at {% if assignment.scheduled_time %}{{ assignment.scheduled_time.strftime('%I:%M %p') }}{% endif %}
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="assignment-action">
+                        <button class="btn btn-primary" onclick="openUpdateModal({{ assignment.id }})">Update Status</button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No assignments yet.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Update Service Request Modal -->
+<div id="updateModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeUpdateModal()">&times;</span>
+        <h2>Update Service Request</h2>
+        <p id="updateRequestTitle">Update the status and add notes for: </p>
+        
+        <form method="POST" id="updateForm" action="">
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status" required>
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="notes">Notes</label>
+                <textarea id="notes" name="notes" placeholder="Add notes about the completed work..." required>Compressor needs inspection. Scheduled for tomorrow.</textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">Update Request</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function openUpdateModal(requestId) {
+    const form = document.getElementById('updateForm');
+    form.action = '/technician/service-request/' + requestId + '/update';
+    document.getElementById('updateModal').style.display = 'block';
+}
+
+function closeUpdateModal() {
+    document.getElementById('updateModal').style.display = 'none';
+}
+
+window.onclick = function(event) {
+    const modal = document.getElementById('updateModal');
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

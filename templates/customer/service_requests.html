@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+
+{% block title %}Service Requests - Customer Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Service Requests</h1>
+        <button class="btn btn-primary" onclick="openNewRequestModal()">+ New Request</button>
+    </div>
+    
+    {% if requests %}
+        <div class="requests-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Appliance</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Technician</th>
+                        <th>Schedule</th>
+                        <th>Created</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                        <tr>
+                            <td><strong>{{ req.title }}</strong></td>
+                            <td>{{ req.brand }}</td>
+                            <td>
+                                <span class="badge badge-{{ req.priority }}">
+                                    {{ req.priority|capitalize }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-badge status-{{ req.status|replace('_', '-') }}">
+                                    {{ req.status|replace('_', ' ')|title }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if req.technician_name %}
+                                    {{ req.technician_name }}
+                                    {% if req.technician_phone %}
+                                        <br><small class="text-muted">Phone: {{ req.technician_phone }}</small>
+                                    {% endif %}
+                                {% else %}
+                                    Unassigned
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if req.customer_confirmed %}
+                                    <span class="text-success">Confirmed</span><br>
+                                    <small>{% if req.scheduled_date %}{{ req.scheduled_date.strftime('%m/%d/%Y') }}{% endif %} {% if req.scheduled_time %}{{ req.scheduled_time.strftime('%H:%M') }}{% endif %}</small>
+                                {% elif req.technician_id and not req.customer_confirmed %}
+                                    <span class="text-warning">Awaiting</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ req.created_at.strftime('%m/%d/%Y') }}</td>
+                            <td>
+                                {% if req.technician_id and not req.customer_confirmed %}
+                                    <a href="javascript:void(0);" onclick="openScheduleModal({{ req.id }})" class="action-link">Select Schedule</a>
+                                {% elif req.customer_confirmed %}
+                                    <span class="text-muted">Scheduled</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No service requests yet.</p>
+            <button class="btn btn-primary" onclick="openNewRequestModal()">Create Your First Request</button>
+        </div>
+    {% endif %}
+</div>
+
+<!-- New Service Request Modal -->
+<div id="newRequestModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeNewRequestModal()">&times;</span>
+        <h2>Create Service Request</h2>
+        <p>Submit a new service request for your appliance</p>
+        
+        <form method="POST" action="{{ url_for('create_service_request') }}" onsubmit="return validateForm(this)">
+            <div class="form-group">
+                <label for="appliance_id">Appliance</label>
+                <select id="appliance_id" name="appliance_id" required>
+                    <option value="">Select appliance</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="title">Issue Title</label>
+                <input type="text" id="title" name="title" placeholder="e.g., Refrigerator not cooling" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="priority">Priority</label>
+                <select id="priority" name="priority" required>
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" placeholder="Describe the issue in detail..." required></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">Submit Request</button>
+        </form>
+    </div>
+</div>
+
+<!-- Select Schedule Modal -->
+<div id="scheduleModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeScheduleModal()">&times;</span>
+        <h2>Select Your Preferred Schedule</h2>
+        <p>Please select from the available time slots provided by our staff:</p>
+        
+        <div id="schedule-loading">Loading available schedules...</div>
+        
+        <div id="schedule-options" style="display: none;">
+            <form id="confirmScheduleForm">
+                <input type="hidden" id="schedule_request_id" name="request_id" value="">
+                
+                <div id="schedule-list">
+                    <!-- Schedule options will be loaded here -->
+                </div>
+                
+                <button type="button" class="btn btn-primary btn-block" style="margin-top: 15px;" onclick="submitScheduleConfirmation()">Confirm Schedule</button>
+            </form>
+        </div>
+        
+        <div id="schedule-empty" style="display: none;">
+            <p class="text-muted">No available schedules yet. Please wait for the staff to set available time slots.</p>
+        </div>
+        
+        <div id="schedule-success" style="display: none;">
+            <p class="text-success" style="font-size: 18px; text-align: center;">Schedule confirmed successfully!</p>
+        </div>
+    </div>
+</div>
+
+<script>
+var currentRequestId = null;
+
+function openNewRequestModal() {
+    document.getElementById('newRequestModal').style.display = 'block';
+    loadAppliances();
+}
+
+function closeNewRequestModal() {
+    document.getElementById('newRequestModal').style.display = 'none';
+}
+
+function openScheduleModal(requestId) {
+    currentRequestId = requestId;
+    document.getElementById('schedule_request_id').value = requestId;
+    document.getElementById('scheduleModal').style.display = 'block';
+    
+    // Reset states
+    document.getElementById('schedule-loading').style.display = 'block';
+    document.getElementById('schedule-options').style.display = 'none';
+    document.getElementById('schedule-empty').style.display = 'none';
+    document.getElementById('schedule-success').style.display = 'none';
+    
+    // Fetch available schedules
+    fetch('/api/service-schedules/' + requestId)
+        .then(function(res) { return res.json(); })
+        .then(function(schedules) {
+            document.getElementById('schedule-loading').style.display = 'none';
+            
+            if (schedules.length === 0) {
+                document.getElementById('schedule-empty').style.display = 'block';
+                return;
+            }
+            
+            var listContainer = document.getElementById('schedule-list');
+            listContainer.innerHTML = '';
+            
+            schedules.forEach(function(schedule) {
+                var date = new Date(schedule.date_str);
+                var dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+                var dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                var timeStr = schedule.time_str;
+                
+                var optionDiv = document.createElement('div');
+                optionDiv.className = 'schedule-option';
+                optionDiv.innerHTML = `
+                    <label class="schedule-option-label">
+                        <input type="radio" name="schedule_id" value="${schedule.id}" required>
+                        <span class="schedule-day">${dayName}</span>
+                        <span class="schedule-date">${dateStr}</span>
+                        <span class="schedule-time">${timeStr}</span>
+                    </label>
+                `;
+                listContainer.appendChild(optionDiv);
+            });
+            
+            document.getElementById('schedule-options').style.display = 'block';
+        })
+        .catch(function(error) {
+            console.error('Error loading schedules:', error);
+            document.getElementById('schedule-loading').style.display = 'none';
+            document.getElementById('schedule-empty').style.display = 'block';
+        });
+}
+
+function closeScheduleModal() {
+    document.getElementById('scheduleModal').style.display = 'none';
+    currentRequestId = null;
+    // Reload the page to refresh data
+    window.location.reload();
+}
+
+function submitScheduleConfirmation() {
+    var selectedRadio = document.querySelector('input[name="schedule_id"]:checked');
+    if (!selectedRadio) {
+        alert('Please select a schedule time slot');
+        return false;
+    }
+    
+    var requestId = document.getElementById('schedule_request_id').value;
+    var scheduleId = selectedRadio.value;
+    
+    // Create form data
+    var formData = new FormData();
+    formData.append('request_id', requestId);
+    formData.append('schedule_id', scheduleId);
+    
+    // Submit via fetch
+    fetch('/customer/service-request/confirm-schedule', {
+        method: 'POST',
+        body: formData
+    })
+    .then(function(res) { 
+        if (res.ok) {
+            // Show success message
+            document.getElementById('schedule-options').style.display = 'none';
+            document.getElementById('schedule-success').style.display = 'block';
+            
+            // Close modal after 2 seconds
+            setTimeout(function() {
+                closeScheduleModal();
+            }, 2000);
+        } else {
+            alert('Error confirming schedule. Please try again.');
+        }
+    })
+    .catch(function(error) {
+        console.error('Error confirming schedule:', error);
+        alert('Error confirming schedule. Please try again.');
+    });
+    
+    return false;
+}
+
+function loadAppliances() {
+    var select = document.getElementById('appliance_id');
+    select.innerHTML = '<option value="">Loading appliances...</option>';
+    
+    fetch('/api/my-appliances')
+        .then(function(res) { return res.json(); })
+        .then(function(appliances) {
+            select.innerHTML = '<option value="">Select appliance</option>';
+            
+            if (appliances.length === 0) {
+                select.innerHTML = '<option value="">No appliances found. Please add an appliance first.</option>';
+                return;
+            }
+            
+            appliances.forEach(function(appliance) {
+                var option = document.createElement('option');
+                option.value = appliance.id;
+                option.textContent = appliance.appliance_name + ' - ' + appliance.brand + ' ' + (appliance.model || '');
+                select.appendChild(option);
+            });
+        })
+        .catch(function(error) {
+            console.error('Error loading appliances:', error);
+            select.innerHTML = '<option value="">Error loading appliances</option>';
+        });
+}
+
+window.onclick = function(event) {
+    var newRequestModal = document.getElementById('newRequestModal');
+    var scheduleModal = document.getElementById('scheduleModal');
+    if (event.target == newRequestModal) {
+        newRequestModal.style.display = 'none';
+    }
+    if (event.target == scheduleModal) {
+        scheduleModal.style.display = 'none';
+    }
+}
+</script>
+
+<style>
+.schedule-option {
+    margin-bottom: 10px;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.schedule-option:hover {
+    border-color: #007bff;
+    background: #f8f9fa;
+}
+.schedule-option-label {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    cursor: pointer;
+    margin: 0;
+}
+.schedule-option-label input[type="radio"] {
+    margin-right: 15px;
+    transform: scale(1.5);
+}
+.schedule-day {
+    font-weight: bold;
+    color: #007bff;
+    margin-right: 15px;
+    min-width: 100px;
+}
+.schedule-date {
+    flex: 1;
+    color: #333;
+}
+.schedule-time {
+    font-weight: bold;
+    color: #28a745;
+}
+.text-success {
+    color: #28a745;
+}
+</style>
+{% endblock %}

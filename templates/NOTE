@@ -1,0 +1,18 @@
+<td><strong>{{ req.title }}</strong></td>
+                                    <td>{{ req.brand }}</td>
+                                    <td><span class="status-badge status-{{ req.status|replace('_', '-') }}">{{ req.status|replace('_', ' ')|title }}</span></td>
+                                    <td>{{ req.technician_name or 'Unassigned' }}</td>
+                                    <td>{{ req.created_at.strftime('%m/%d/%Y') }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <a href="{{ url_for('customer_service_requests') }}" class="link-view-all">View All Requests</a>
+            {% else %}
+                <p class="empty-state">No service requests yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

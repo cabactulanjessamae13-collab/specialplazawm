@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Service Request Management - Staff Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Service Request Management</h1>
+    </div>
+    
+    {% if requests %}
+        <div class="requests-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Customer</th>
+                        <th>Appliance</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Technician</th>
+                        <th>Schedule</th>
+                        <th>Created</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                        <tr>
+                            <td><strong>{{ req.title }}</strong></td>
+                            <td>{{ req.customer_name }}</td>
+                            <td>{{ req.brand }}</td>
+                            <td>
+                                <span class="badge badge-{{ req.priority }}">
+                                    {{ req.priority|capitalize }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-badge status-{{ req.status|replace('_', '-') }}">
+                                    {{ req.status|replace('_', ' ')|title }}
+                                </span>
+                            </td>
+                            <td>{{ req.technician_name or 'Unassigned' }}</td>
+                            <td>
+                                {% if req.customer_confirmed %}
+                                    <span class="text-success">Confirmed</span><br>
+                                    <small>{% if req.scheduled_date %}{{ req.scheduled_date.strftime('%m/%d/%Y') }}{% endif %} {% if req.scheduled_time %}{{ req.scheduled_time.strftime('%H:%M') }}{% endif %}</small>
+                                {% elif req.technician_id %}
+                                    <span class="text-warning">Pending</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ req.created_at.strftime('%m/%d/%Y') }}</td>
+                            <td>
+                                {% if not req.technician_id %}
+                                    <a href="javascript:void(0);" onclick="openAssignModal({{ req.id }}, '{{ req.title }}')" class="action-link">Assign</a>
+                                {% elif not req.customer_confirmed and req.technician_id %}
+                                    <a href="javascript:void(0);" onclick="openScheduleModal({{ req.id }}, '{{ req.title }}')" class="action-link">Set Schedule</a>
+                                {% else %}
+                                    <span class="text-muted">Assigned</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No service requests yet.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Assign Technician Modal -->
+<div id="assignModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeAssignModal()">&times;</span>
+        <h2>Assign Technician</h2>
+        <p id="assignRequestTitle">Assign a technician to: </p>
+        
+        <form method="POST" action="{{ url_for('assign_technician') }}" id="assignForm">
+            <input type="hidden" id="request_id" name="request_id" value="">
+            
+            <div class="form-group">
+                <label for="technician_id">Select technician</label>
+                <select id="technician_id" name="technician_id" required>
+                    <option value="">Select technician</option>
+                    {% for technician in technicians %}
+                        <option value="{{ technician.id }}">{{ technician.full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">Assign Technician</button>
+        </form>
+    </div>
+</div>
+
+<!-- Set Schedule Modal -->
+<div id="scheduleModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeScheduleModal()">&times;</span>
+        <h2>Set Available Schedule</h2>
+        <p id="scheduleRequestTitle">Set available time slots for: </p>
+        <p class="text-muted"><small>Monday - Saturday only</small></p>
+        
+        <form method="POST" action="{{ url_for('set_service_schedule') }}" id="scheduleForm">
+            <input type="hidden" id="schedule_request_id" name="request_id" value="">
+            
+            <div id="schedule-slots">
+                <div class="schedule-slot-row">
+                    <div class="form-group">
+                        <label>Date (Mon-Sat)</label>
+                        <input type="date" name="schedule_date[]" required min="">
+                    </div>
+                    <div class="form-group">
+                        <label>Time</label>
+                        <input type="time" name="schedule_time[]" required>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="button" class="btn btn-secondary" onclick="addScheduleSlot()">+ Add Another Time Slot</button>
+            <button type="submit" class="btn btn-primary btn-block" style="margin-top: 15px;">Save Available Schedules</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function openAssignModal(requestId, requestTitle) {
+    document.getElementById('request_id').value = requestId;
+    document.getElementById('assignRequestTitle').innerText = 'Assign a technician to: ' + requestTitle;
+    document.getElementById('assignModal').style.display = 'block';
+}
+
+function closeAssignModal() {
+    document.getElementById('assignModal').style.display = 'none';
+}
+
+function openScheduleModal(requestId, requestTitle) {
+    document.getElementById('schedule_request_id').value = requestId;
+    document.getElementById('scheduleRequestTitle').innerText = 'Set available time slots for: ' + requestTitle;
+    
+    // Set min date to today
+    const today = new Date().toISOString().split('T')[0];
+    const dateInputs = document.querySelectorAll('input[name="schedule_date[]"]');
+    dateInputs.forEach(function(input) {
+        input.min = today;
+    });
+    
+    document.getElementById('scheduleModal').style.display = 'block';
+}
+
+function closeScheduleModal() {
+    document.getElementById('scheduleModal').style.display = 'none';
+}
+
+function addScheduleSlot() {
+    const container = document.getElementById('schedule-slots');
+    const newSlot = document.createElement('div');
+    newSlot.className = 'schedule-slot-row';
+    newSlot.innerHTML = `
+        <div class="form-group">
+            <label>Date (Mon-Sat)</label>
+            <input type="date" name="schedule_date[]" required min="">
+        </div>
+        <div class="form-group">
+            <label>Time</label>
+            <input type="time" name="schedule_time[]" required>
+        </div>
+    `;
+    container.appendChild(newSlot);
+    
+    // Set min date
+    const today = new Date().toISOString().split('T')[0];
+    newSlot.querySelector('input[name="schedule_date[]"]').min = today;
+}
+
+window.onclick = function(event) {
+    const assignModal = document.getElementById('assignModal');
+    const scheduleModal = document.getElementById('scheduleModal');
+    if (event.target == assignModal) {
+        assignModal.style.display = 'none';
+    }
+    if (event.target == scheduleModal) {
+        scheduleModal.style.display = 'none';
+    }
+}
+
+// Set min date on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    const dateInputs = document.querySelectorAll('input[name="schedule_date[]"]');
+    dateInputs.forEach(function(input) {
+        input.min = today;
+    });
+});
+</script>
+
+<style>
+.schedule-slot-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 5px;
+}
+.schedule-slot-row .form-group {
+    flex: 1;
+}
+.text-success {
+    color: #28a745;
+}
+</style>
+{% endblock %}

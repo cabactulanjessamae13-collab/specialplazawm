@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Appliance Management - Staff Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Appliance Management</h1>
+        <button class="btn btn-primary" onclick="openAddApplianceModal()">+ Register Appliance</button>
+    </div>
+    
+    {% if appliances %}
+        <div class="appliances-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Brand/Model</th>
+                        <th>Serial Number</th>
+                        <th>Category</th>
+                        <th>Customer</th>
+                        <th>Purchase Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appliance in appliances %}
+                        <tr>
+                            <td><strong>{{ appliance.appliance_name }}</strong></td>
+                            <td>{{ appliance.brand }} - {{ appliance.model }}</td>
+                            <td>{{ appliance.serial_number }}</td>
+                            <td>{{ appliance.category|capitalize }}</td>
+                            <td>{{ appliance.customer_name }}</td>
+                            <td>{{ appliance.purchase_date.strftime('%m/%d/%Y') if appliance.purchase_date else 'N/A' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No appliances registered yet.</p>
+            <button class="btn btn-primary" onclick="openAddApplianceModal()">Register First Appliance</button>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Add Appliance Modal -->
+<div id="addApplianceModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeAddApplianceModal()">&times;</span>
+        <h2>Register New Appliance</h2>
+        <p>Add a new appliance to the system</p>
+        
+        <form method="POST" action="{{ url_for('add_appliance') }}">
+            <div class="form-group">
+                <label for="customer_id">Customer</label>
+                <select id="customer_id" name="customer_id" required>
+                    <option value="">Select customer</option>
+                    {% for customer in customers %}
+                        <option value="{{ customer.id }}">{{ customer.full_name }} ({{ customer.email }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="appliance_name">Appliance Name</label>
+                <input type="text" id="appliance_name" name="appliance_name" placeholder="Refrigerator" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="brand">Brand</label>
+                <input type="text" id="brand" name="brand" placeholder="Samsung" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="model">Model</label>
+                <input type="text" id="model" name="model" placeholder="RF28R7351SR" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="serial_number">Serial Number</label>
+                <input type="text" id="serial_number" name="serial_number" placeholder="SN001234567" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="category">Category</label>
+                <select id="category" name="category" required>
+                    <option value="">Select category</option>
+                    <option value="kitchen">Kitchen</option>
+                    <option value="laundry">Laundry</option>
+                    <option value="climate">Climate</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="purchase_date">Purchase Date</label>
+                <input type="date" id="purchase_date" name="purchase_date" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">Register Appliance</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function openAddApplianceModal() {
+    document.getElementById('addApplianceModal').style.display = 'block';
+}
+
+function closeAddApplianceModal() {
+    document.getElementById('addApplianceModal').style.display = 'none';
+}
+
+window.onclick = function(event) {
+    const modal = document.getElementById('addApplianceModal');
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% if 'role' in session %}
+<nav class="navbar">
+    <div class="navbar-container">
+        <div class="navbar-brand">
+            <a href="/">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Special Appliance Plaza" class="navbar-logo">
+                <span class="navbar-text">{{ session.full_name }}</span>
+            </a>
+        </div>
+        
+        <div class="navbar-menu">
+            {% if session.role == 'customer' %}
+                <a href="{{ url_for('customer_dashboard') }}" class="nav-btn {% if request.endpoint == 'customer_dashboard' %}active{% endif %}">Dashboard</a>
+                <a href="{{ url_for('customer_warranties') }}" class="nav-btn {% if request.endpoint == 'customer_warranties' %}active{% endif %}">My Warranties</a>
+                <a href="{{ url_for('customer_service_requests') }}" class="nav-btn {% if request.endpoint == 'customer_service_requests' %}active{% endif %}">Service Requests</a>
+                <a href="{{ url_for('customer_defects') }}" class="nav-btn {% if request.endpoint == 'customer_defects' %}active{% endif %}">Report Defect</a>
+                <a href="{{ url_for('customer_feedback') }}" class="nav-btn {% if request.endpoint == 'customer_feedback' %}active{% endif %}">Feedback</a>
+            {% elif session.role == 'staff' %}
+                <a href="{{ url_for('staff_dashboard') }}" class="nav-btn {% if request.endpoint == 'staff_dashboard' %}active{% endif %}">Dashboard</a>
+                <a href="{{ url_for('staff_customers') }}" class="nav-btn {% if request.endpoint == 'staff_customers' %}active{% endif %}">Customers</a>
+                <a href="{{ url_for('staff_appliances') }}" class="nav-btn {% if request.endpoint == 'staff_appliances' %}active{% endif %}">Appliances</a>
+                <a href="{{ url_for('staff_warranties') }}" class="nav-btn {% if request.endpoint == 'staff_warranties' %}active{% endif %}">Warranties</a>
+                <a href="{{ url_for('staff_service_requests') }}" class="nav-btn {% if request.endpoint == 'staff_service_requests' %}active{% endif %}">Service Requests</a>
+                <a href="{{ url_for('staff_sales') }}" class="nav-btn {% if request.endpoint == 'staff_sales' %}active{% endif %}">Sales</a>
+                <a href="{{ url_for('staff_bonuses') }}" class="nav-btn {% if request.endpoint == 'staff_bonuses' %}active{% endif %}">Bonuses</a>
+            {% elif session.role == 'manager' %}
+                <a href="{{ url_for('staff_dashboard') }}" class="nav-btn {% if request.endpoint == 'staff_dashboard' %}active{% endif %}">Dashboard</a>
+                <a href="{{ url_for('staff_customers') }}" class="nav-btn {% if request.endpoint == 'staff_customers' %}active{% endif %}">Customers</a>
+                <a href="{{ url_for('staff_appliances') }}" class="nav-btn {% if request.endpoint == 'staff_appliances' %}active{% endif %}">Appliances</a>
+                <a href="{{ url_for('staff_warranties') }}" class="nav-btn {% if request.endpoint == 'staff_warranties' %}active{% endif %}">Warranties</a>
+                <a href="{{ url_for('staff_service_requests') }}" class="nav-btn {% if request.endpoint == 'staff_service_requests' %}active{% endif %}">Service Requests</a>
+                <a href="{{ url_for('staff_bonuses') }}" class="nav-btn {% if request.endpoint == 'staff_bonuses' %}active{% endif %}">Bonuses</a>
+                <a href="{{ url_for('manager_defects') }}" class="nav-btn {% if request.endpoint == 'manager_defects' %}active{% endif %}">Defects</a>
+                <a href="{{ url_for('manager_feedback') }}" class="nav-btn {% if request.endpoint == 'manager_feedback' %}active{% endif %}">Feedback</a>
+                <a href="#" class="nav-btn" onclick="document.getElementById('addUserModal').style.display='block'">+ Add User</a>
+            {% elif session.role == 'technician' %}
+                <a href="{{ url_for('technician_assignments') }}" class="nav-btn {% if request.endpoint == 'technician_assignments' %}active{% endif %}">My Assignments</a>
+            {% endif %}
+        </div>
+        
+        <div class="navbar-logout">
+            <span class="navbar-user-role">{{ session.role }}</span>
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+        </div>
+    </div>
+</nav>
+{% endif %}

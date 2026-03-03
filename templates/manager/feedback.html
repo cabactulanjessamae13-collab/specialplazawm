@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Feedback Overview - Special Appliance Plaza{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>Feedback Overview</h1>
+        <p>View customer feedback for services and technicians</p>
+    </div>
+    
+    <!-- Summary Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ service_feedback|length + technician_feedback|length }}</div>
+            <div class="stat-label">Total Feedback</div>
+            <div class="stat-description">All time feedback received</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ service_feedback|length }}</div>
+            <div class="stat-label">Service Feedback</div>
+            <div class="stat-description">Service quality ratings</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ technician_feedback|length }}</div>
+            <div class="stat-label">Technician Feedback</div>
+            <div class="stat-description">Technician performance ratings</div>
+        </div>
+    </div>
+    
+    <!-- Service Feedback Section -->
+    <div class="content-card">
+        <h2>Service Feedback</h2>
+        {% if service_feedback %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Service</th>
+                    <th>Appliance</th>
+                    <th>Rating</th>
+                    <th>Comments</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for feedback in service_feedback %}
+                <tr>
+                    <td>{{ feedback.created_at|date_format }}</td>
+                    <td>{{ feedback.customer_name }}</td>
+                    <td>{{ feedback.service_title }}</td>
+                    <td>{{ feedback.appliance_name }} - {{ feedback.brand }}</td>
+                    <td>
+                        <span class="rating-stars">
+                            {% for i in range(feedback.rating) %}★{% endfor %}
+                            {% for i in range(5 - feedback.rating) %}☆{% endfor %}
+                        </span>
+                        <span class="rating-number">({{ feedback.rating }}/5)</span>
+                    </td>
+                    <td>
+                        {% if feedback.comments %}
+                        <span class="comment-text">{{ feedback.comments }}</span>
+                        {% else %}
+                        <span class="text-muted">No comments</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty-message">No service feedback yet.</p>
+        {% endif %}
+    </div>
+    
+    <!-- Technician Feedback Section -->
+    <div class="content-card">
+        <h2>Technician Feedback</h2>
+        {% if technician_feedback %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Technician</th>
+                    <th>Service</th>
+                    <th>Appliance</th>
+                    <th>Rating</th>
+                    <th>Comments</th>
+                    <th>Tip</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for feedback in technician_feedback %}
+                <tr>
+                    <td>{{ feedback.created_at|date_format }}</td>
+                    <td>{{ feedback.customer_name }}</td>
+                    <td>{{ feedback.technician_name or 'N/A' }}</td>
+                    <td>{{ feedback.service_title }}</td>
+                    <td>{{ feedback.appliance_name }} - {{ feedback.brand }}</td>
+                    <td>
+                        <span class="rating-stars">
+                            {% for i in range(feedback.rating) %}★{% endfor %}
+                            {% for i in range(5 - feedback.rating) %}☆{% endfor %}
+                        </span>
+                        <span class="rating-number">({{ feedback.rating }}/5)</span>
+                    </td>
+                    <td>
+                        {% if feedback.comments %}
+                        <span class="comment-text">{{ feedback.comments }}</span>
+                        {% else %}
+                        <span class="text-muted">No comments</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if feedback.tip_amount and feedback.tip_amount > 0 %}
+                        <span class="tip-amount">₱{{ "%.2f"|format(feedback.tip_amount) }}</span>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty-message">No technician feedback yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.rating-stars {
+    color: #FFD700;
+    font-size: 16px;
+    letter-spacing: 2px;
+}
+.rating-number {
+    color: #666;
+    font-size: 12px;
+    margin-left: 5px;
+}
+.comment-text {
+    max-width: 200px;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.tip-amount {
+    font-weight: 600;
+    color: var(--success-color);
+}
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.data-table th,
+.data-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #E0E0E0;
+}
+.data-table th {
+    background-color: #F5F6FA;
+    font-weight: 600;
+    color: #666;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+.data-table tbody tr:hover {
+    background-color: #F9F9F9;
+}
+</style>
+{% endblock %}

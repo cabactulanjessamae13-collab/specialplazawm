@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Staff Dashboard</h1>
+    </div>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ total_customers }}</div>
+            <div class="stat-label">Total Customers</div>
+            <div class="stat-description">Registered users</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-number">{{ total_appliances }}</div>
+            <div class="stat-label">Total Appliances</div>
+            <div class="stat-description">Registered devices</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-number">{{ active_warranties }}</div>
+            <div class="stat-label">Active Warranties</div>
+            <div class="stat-description">Currently active</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-number">{{ pending_requests }}</div>
+            <div class="stat-label">Pending Requests</div>
+            <div class="stat-description">Awaiting assignment</div>
+        </div>
+    </div>
+    
+    <div class="dashboard-content">
+        <div class="dashboard-section">
+            <div class="section-header">
+                <h2>Recent Customers</h2>
+                <span class="section-subtitle">Latest registered customers</span>
+            </div>
+            
+            {% if recent_customers %}
+                <div class="customers-list">
+                    {% for customer in recent_customers %}
+                        <div class="customer-item">
+                            <div class="customer-info">
+                                <h4>{{ customer.full_name }}</h4>
+                                <p>{{ customer.email }}</p>
+                                <p class="phone">{{ customer.phone or 'N/A' }}</p>
+                            </div>
+                            <div class="customer-meta">
+                                <span class="registered-date">Registered: {{ customer.created_at.strftime('%m/%d/%Y') }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="empty-state">No customers yet.</p>
+            {% endif %}
+        </div>
+        
+        <div class="dashboard-section">
+            <div class="section-header">
+                <h2>Pending Service Requests</h2>
+                <span class="section-subtitle">Awaiting technician assignment</span>
+            </div>
+            
+            {% if pending_service_requests %}
+                <div class="requests-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Customer</th>
+                                <th>Appliance</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in pending_service_requests %}
+                                <tr>
+                                    <td><strong>{{ req.title }}</strong></td>
+                                    <td>{{ req.full_name }}</td>
+                                    <td>{{ req.brand }}</td>
+                                    <td>
+                                        <span class="badge badge-{{ req.priority }}">
+                                            {{ req.priority|capitalize }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge status-{{ req.status|replace('_', '-') }}">
+                                            {{ req.status|replace('_', ' ')|title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ req.created_at.strftime('%m/%d/%Y') }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="empty-state">All requests assigned!</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

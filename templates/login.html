@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Special Appliance Plaza{% endblock %}
+
+{% block content %}
+<div class="login-page">
+    <div class="login-container">
+        <div class="login-box">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Special Appliance Plaza" class="login-logo">
+            <h2>Welcome to Special Appliance Plaza</h2>
+            <p>Warranty Management System</p>
+            
+            {% if error %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endif %}
+            
+            <form method="POST" action="{{ url_for('login') }}" class="login-form">
+                <div class="role-tabs">
+                    <label class="role-tab">
+                        <input type="radio" name="role" value="customer" checked>
+                        <span>Customer</span>
+                    </label>
+                    <label class="role-tab">
+                        <input type="radio" name="role" value="staff">
+                        <span>Staff</span>
+                    </label>
+                    <label class="role-tab">
+                        <input type="radio" name="role" value="technician">
+                        <span>Tech</span>
+                    </label>
+                    <label class="role-tab">
+                        <input type="radio" name="role" value="manager">
+                        <span>Manager</span>
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="john@customer.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter password" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+            </form>
+            
+            <div class="login-demo">
+                <p class="demo-label">🚀 Quick Demo Login:</p>
+                <div class="demo-buttons-grid">
+                    <button type="button" class="btn btn-demo" onclick="quickLogin('customer', 'john@customer.com', 'password123')">
+                        👥 Customer
+                    </button>
+                    <button type="button" class="btn btn-demo" onclick="quickLogin('staff', 'staff@special.com', 'password123')">
+                        👔 Staff
+                    </button>
+                    <button type="button" class="btn btn-demo" onclick="quickLogin('technician', 'tom@technician.com', 'password123')">
+                        🔧 Technician
+                    </button>
+                    <button type="button" class="btn btn-demo" onclick="quickLogin('manager', 'manager@special.com', 'password123')">
+                        👨‍💼 Manager
+                    </button>
+                </div>
+            </div>
+            
+            <div class="login-footer">
+                <a href="{{ url_for('index') }}">Back to Home</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function quickLogin(role, email, password) {
+    document.querySelector('input[name="role"][value="' + role + '"]').checked = true;
+    document.querySelector('#email').value = email;
+    document.querySelector('#password').value = password;
+    document.querySelector('form').submit();
+}
+</script>
+{% endblock %}
+

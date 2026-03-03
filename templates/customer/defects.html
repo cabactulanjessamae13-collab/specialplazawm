@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+
+{% block title %}Report Defect - Special Appliance Plaza{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>Report Appliance Defect</h1>
+        <p>Report issues with your appliances and track their status</p>
+    </div>
+    
+    <div class="defect-layout">
+        <!-- Report New Defect Form -->
+        <div class="content-card defect-form-card">
+            <div class="card-header">
+                <span class="card-icon">🔧</span>
+                <h2>Report a New Defect</h2>
+            </div>
+            <form method="POST" action="{{ url_for('create_defect') }}" class="defect-form">
+                <div class="form-group">
+                    <label for="appliance_id">
+                        <span class="label-icon">📦</span> Select Appliance
+                    </label>
+                    <select id="appliance_id" name="appliance_id" required>
+                        <option value="">-- Select Appliance --</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="severity">
+                        <span class="label-icon">⚠️</span> Defect Severity
+                    </label>
+                    <select id="severity" name="severity" required>
+                        <option value="">-- Select Severity --</option>
+                        <option value="low">🟢 Low - Minor issue</option>
+                        <option value="medium">🟡 Medium - Affects usage</option>
+                        <option value="high">🟠 High - Safety concern</option>
+                        <option value="critical">🔴 Critical - Immediate hazard</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="defect_description">
+                        <span class="label-icon">📝</span> Describe the Defect
+                    </label>
+                    <textarea id="defect_description" name="defect_description" rows="4" required placeholder="Describe what's wrong with your appliance in detail..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span>📨</span> Submit Defect Report
+                </button>
+            </form>
+        </div>
+        
+        <!-- My Defect Reports -->
+        <div class="content-card defect-reports-card">
+            <div class="card-header">
+                <span class="card-icon">📋</span>
+                <h2>My Defect Reports</h2>
+                <span class="defect-count">{{ defects|length }} Reports</span>
+            </div>
+            
+            {% if defects %}
+            <div class="defects-grid">
+                {% for defect in defects %}
+                <div class="defect-card">
+                    <div class="defect-header defect-{{ defect.severity }}">
+                        <div class="defect-appliance">
+                            <span class="appliance-icon">🏠</span>
+                            <div>
+                                <strong>{{ defect.appliance_name }}</strong>
+                                <small>{{ defect.brand }} {{ defect.model }}</small>
+                            </div>
+                        </div>
+                        <span class="badge badge-{{ defect.severity }}">{{ defect.severity|title }}</span>
+                    </div>
+                    <div class="defect-body">
+                        <p class="defect-description">{{ defect.defect_description }}</p>
+                        <div class="defect-meta">
+                            <span class="defect-date">📅 {{ defect.created_at|date_format }}</span>
+                            <span class="badge badge-{{ defect.status }}">{{ defect.status|replace('_', ' ')|title }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <span class="empty-icon">✅</span>
+                <p class="empty-message">No defect reports submitted yet.</p>
+                <p class="empty-hint">Your defect reports will appear here once submitted.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+async function loadAppliances() {
+    try {
+        const response = await fetch('/api/my-appliances');
+        const appliances = await response.json();
+        
+        const select = document.getElementById('appliance_id');
+        if (appliances.length === 0) {
+            const option = document.createElement('option');
+            option.textContent = 'No appliances registered';
+            option.disabled = true;
+            select.appendChild(option);
+            return;
+        }
+        
+        appliances.forEach(appliance => {
+            const option = document.createElement('option');
+            option.value = appliance.id;
+            option.textContent = `${appliance.appliance_name} - ${appliance.brand} ${appliance.model}`;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading appliances:', error);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadAppliances);
+</script>
+
+<style>
+.defect-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 30px;
+    padding: 20px 30px;
+}
+
+.page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px;
+}
+
+@media (max-width: 992px) {
+    .defect-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.defect-form-card {
+    height: fit-content;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #E0E0E0;
+}
+
+.card-header h2 {
+    margin: 0;
+    flex: 1;
+    font-size: 20px;
+    color: var(--dark-color);
+}
+
+.card-icon {
+    font-size: 28px;
+}
+
+.defect-count {
+    background: var(--primary-color);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.defect-form .form-group {
+    margin-bottom: 20px;
+}
+
+.defect-form label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--dark-color);
+    font-size: 14px;
+}
+
+.label-icon {
+    font-size: 16px;
+}
+
+.defect-form select,
+.defect-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.defect-form select:focus,
+.defect-form textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.1);
+}
+
+.defect-form textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.btn-block {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px;
+    font-size: 15px;
+}
+
+.defects-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.defect-card {
+    background: white;
+    border: 1px solid #E0E0E0;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.defect-card:hover {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.defect-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: #F5F6FA;
+}
+
+.defect-header.defect-low {
+    border-left: 4px solid #28a745;
+}
+
+.defect-header.defect-medium {
+    border-left: 4px solid #ffc107;
+}
+
+.defect-header.defect-high {
+    border-left: 4px solid #fd7e14;
+}
+
+.defect-header.defect-critical {
+    border-left: 4px solid #dc3545;
+}
+
+.defect-appliance {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.appliance-icon {
+    font-size: 24px;
+}
+
+.defect-appliance strong {
+    display: block;
+    font-size: 15px;
+    color: var(--dark-color);
+}
+
+.defect-appliance small {
+    font-size: 12px;
+    color: #666;
+}
+
+.defect-body {
+    padding: 20px;
+}
+
+.defect-description {
+    margin: 0 0 15px 0;
+    color: #444;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.defect-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.defect-date {
+    font-size: 12px;
+    color: #999;
+}
+
+.badge-low { background-color: #28a745; color: white; }
+.badge-medium { background-color: #ffc107; color: black; }
+.badge-high { background-color: #fd7e14; color: white; }
+.badge-critical { background-color: #dc3545; color: white; }
+.badge-pending { background-color: #6c757d; color: white; }
+.badge-under_review { background-color: #17a2b8; color: white; }
+.badge-repair { background-color: #28a745; color: white; }
+.badge-replace { background-color: #dc3545; color: white; }
+.badge-resolved { background-color: #20c997; color: white; }
+
+.empty-state {
+    text-align: center;
+    padding: 50px 20px;
+}
+
+.empty-icon {
+    font-size: 56px;
+    display: block;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.empty-hint {
+    color: #999;
+    font-size: 13px;
+    margin-top: 8px;
+}
+</style>
+{% endblock %}

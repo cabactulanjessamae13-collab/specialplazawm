@@ -1,0 +1,25 @@
+@app.route('/api/my-appliances', methods=['GET'])
+def api_get_my_appliances():
+    """Get current customer's appliances"""
+    if 'user_id' not in session or session.get('role') != 'customer':
+        return jsonify({'success': False}), 401
+    
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    cursor.execute('SELECT id FROM customers WHERE user_id = %s', (session['user_id'],))
+    customer = cursor.fetchone()
+    
+    if not customer:
+        cursor.close()
+        return jsonify([])
+    
+    cursor.execute('''
+        SELECT id, appliance_name, brand, model
+        FROM appliances
+        WHERE customer_id = %s
+        ORDER BY appliance_name
+    ''', (customer['id'],))
+    appliances = cursor.fetchall()
+    cursor.close()
+    
+    return jsonify(appliances)

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error - 500{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="text-align: center; padding: 100px 20px;">
+        <h1 style="font-size: 48px; color: #E63946; margin-bottom: 20px;">500</h1>
+        <h2>Server Error</h2>
+        <p style="color: #999; margin-bottom: 30px;">Something went wrong on our end. Please try again later.</p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary">Go Home</a>
+    </div>
+</div>
+{% endblock %}

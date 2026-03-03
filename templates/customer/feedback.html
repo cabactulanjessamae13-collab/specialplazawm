@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+
+{% block title %}Feedback - Special Appliance Plaza{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>Service Feedback</h1>
+        <p>Rate your service experience and technician performance</p>
+    </div>
+    
+    {% if completed_requests %}
+    <div class="content-card">
+<h2 style="text-align: center;">Rate Completed Services</h2>
+<p class="section-subtitle" style="text-align: center;">Select a rating and share your experience</p>
+        
+        <div class="feedback-grid">
+            {% for request in completed_requests %}
+            <div class="feedback-card">
+                <div class="feedback-header">
+                    <h3>{{ request.title }}</h3>
+                    <span class="appliance-tag">{{ request.appliance_name }} - {{ request.brand }}</span>
+                </div>
+                
+                <div class="feedback-forms-container">
+                    <!-- Service Feedback Form -->
+                    <form method="POST" action="{{ url_for('submit_service_feedback') }}" class="feedback-form">
+                        <input type="hidden" name="service_request_id" value="{{ request.id }}">
+                        
+                        <div class="form-section">
+                            <h4><span class="section-icon">⭐</span> Rate the Service</h4>
+                            <div class="form-group">
+                                <label>Rating (1-5 stars)</label>
+                                <div class="star-rating">
+                                    <input type="radio" id="service{{ request.id }}_5" name="rating" value="5" required><label for="service{{ request.id }}_5" title="5 stars">★</label>
+                                    <input type="radio" id="service{{ request.id }}_4" name="rating" value="4"><label for="service{{ request.id }}_4" title="4 stars">★</label>
+                                    <input type="radio" id="service{{ request.id }}_3" name="rating" value="3"><label for="service{{ request.id }}_3" title="3 stars">★</label>
+                                    <input type="radio" id="service{{ request.id }}_2" name="rating" value="2"><label for="service{{ request.id }}_2" title="2 stars">★</label>
+                                    <input type="radio" id="service{{ request.id }}_1" name="rating" value="1"><label for="service{{ request.id }}_1" title="1 star">★</label>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="service_comments{{ request.id }}">Comments (optional)</label>
+                                <textarea id="service_comments{{ request.id }}" name="comments" rows="2" placeholder="Share your experience with the service..."></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-sm">Submit Service Feedback</button>
+                        </div>
+                    </form>
+                    
+                    <!-- Technician Feedback Form (if technician assigned) -->
+                    {% if request.technician_id %}
+                    <form method="POST" action="{{ url_for('submit_technician_feedback') }}" class="feedback-form">
+                        <input type="hidden" name="service_request_id" value="{{ request.id }}">
+                        <input type="hidden" name="technician_id" value="{{ request.technician_id }}">
+                        
+                        <div class="form-section">
+                            <h4><span class="section-icon">👨‍🔧</span> Rate the Technician</h4>
+                            <div class="form-group">
+                                <label>Rating (1-5 stars)</label>
+                                <div class="star-rating">
+                                    <input type="radio" id="tech{{ request.id }}_5" name="rating" value="5" required><label for="tech{{ request.id }}_5" title="5 stars">★</label>
+                                    <input type="radio" id="tech{{ request.id }}_4" name="rating" value="4"><label for="tech{{ request.id }}_4" title="4 stars">★</label>
+                                    <input type="radio" id="tech{{ request.id }}_3" name="rating" value="3"><label for="tech{{ request.id }}_3" title="3 stars">★</label>
+                                    <input type="radio" id="tech{{ request.id }}_2" name="rating" value="2"><label for="tech{{ request.id }}_2" title="2 stars">★</label>
+                                    <input type="radio" id="tech{{ request.id }}_1" name="rating" value="1"><label for="tech{{ request.id }}_1" title="1 star">★</label>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="tech_comments{{ request.id }}">Comments (optional)</label>
+                                <textarea id="tech_comments{{ request.id }}" name="comments" rows="2" placeholder="How was the technician?"></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="tip{{ request.id }}">Tip Amount (₱)</label>
+                                <input type="number" id="tip{{ request.id }}" name="tip_amount" min="0" step="0.01" placeholder="0.00">
+                                <small class="form-hint">Optional: Tip your technician</small>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-sm">Submit Technician Feedback</button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="content-card">
+        <div class="empty-state">
+            <span class="empty-icon">📋</span>
+            <p class="empty-message">No completed services to provide feedback for yet.</p>
+            <p class="empty-hint">Your feedback will appear here once your service requests are completed.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.feedback-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
+    margin-left: 40px;
+}
+
+.feedback-card {
+    background: white;
+    border: 1px solid #E0E0E0;
+    border-radius: 12px;
+    padding: 0;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    text-align: center;
+}
+
+.feedback-card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    border-color: var(--primary-color);
+}
+
+.feedback-header {
+    background: linear-gradient(135deg, #E63946 0%, #C62B35 100%);
+    color: white;
+    padding: 20px;
+    margin: 0;
+}
+
+.feedback-header h3 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    color: white;
+}
+
+.appliance-tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+.feedback-forms-container {
+    padding: 20px;
+}
+
+.form-section {
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px dashed #E0E0E0;
+}
+
+.form-section:last-child {
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-bottom: none;
+}
+
+.form-section h4 {
+    margin: 0 0 15px 0;
+    font-size: 14px;
+    color: var(--dark-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding-left: 20px;
+}
+
+.section-icon {
+    font-size: 16px;
+}
+
+.feedback-form {
+    margin: 0;
+    padding: 0;
+}
+
+.feedback-form .form-group {
+    margin-bottom: 15px;
+}
+
+.feedback-form label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 13px;
+    color: #666;
+}
+
+.feedback-form textarea,
+.feedback-form input[type="number"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #E0E0E0;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.feedback-form textarea:focus,
+.feedback-form input[type="number"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.1);
+}
+
+.form-hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: #999;
+}
+
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 13px;
+}
+
+.star-rating {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 5px;
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating label {
+    font-size: 28px;
+    color: #E0E0E0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0 2px;
+}
+
+.star-rating label:hover,
+.star-rating label:hover ~ label,
+.star-rating input:checked ~ label {
+    color: #FFD700;
+    transform: scale(1.1);
+}
+
+.star-rating input:checked + label,
+.star-rating input:checked + label ~ label {
+    color: #FFD700;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-icon {
+    font-size: 64px;
+    display: block;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-hint {
+    color: #999;
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+.section-subtitle {
+    color: #666;
+    font-size: 14px;
+    margin-top: -10px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .feedback-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

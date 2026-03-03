@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found - 404{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="text-align: center; padding: 100px 20px;">
+        <h1 style="font-size: 48px; color: #E63946; margin-bottom: 20px;">404</h1>
+        <h2>Page Not Found</h2>
+        <p style="color: #999; margin-bottom: 30px;">The page you're looking for doesn't exist.</p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary">Go Home</a>
+    </div>
+</div>
+{% endblock %}
