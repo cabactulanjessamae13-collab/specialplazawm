@@ -267,3 +267,4 @@ For issues or questions, please check:
 
 Special Appliance Plaza - Warranty Management System
 Copyright © 2026
+# specialplazawm
